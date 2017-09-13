@@ -1,0 +1,53 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pmm-server
+  labels:
+    name: pmm-server
+spec:
+  containers:
+  - resources:
+      limits:
+        cpu: 0.5
+    name: pmm-server
+    image: percona/pmm-server
+    ports:
+      - containerPort: 80 
+    volumeMounts:
+    - mountPath: /opt/prometheus/data
+      name: pmm-prom-data
+    volumeMounts:
+    - mountPath: /opt/consul-data
+      name: pmm-consul-data
+    volumeMounts:
+    - mountPath: /var/lib/mysql 
+      name: pmm-mysql-data
+    volumeMounts:
+    - mountPath: /var/lib/grafana 
+      name: pmm-grafana-data
+  restartPolicy: Always
+  volumes:
+  - name: pmm-prom-data
+    emptyDir: {}
+  - name: pmm-consul-data
+    emptyDir: {}
+  - name: pmm-mysql-data
+    emptyDir: {}
+  - name: pmm-grafana-data
+    emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pmm-server
+spec:
+  ports:
+  - name: ui
+    port: 80
+    nodePort: 31758
+    protocol: TCP
+  selector:
+    name: pmm-server
+  sessionAffinity: None
+  type: NodePort 
