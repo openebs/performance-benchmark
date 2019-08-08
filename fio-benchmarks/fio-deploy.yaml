@@ -1,0 +1,91 @@
+
+# NOTE: For details of params to construct an fio job, refer to this link:
+# https://fio.readthedocs.io/en/latest/fio_doc.html
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: dbench-
+spec:
+  template:
+    spec:
+      containers:
+      - name: dbench
+        image: openebs/perf-test:latest
+        imagePullPolicy: IfNotPresent
+        env:
+
+          ## storage mount point on which testfiles are created
+
+          - name: DBENCH_MOUNTPOINT
+            value: /data
+
+          ##########################################################
+          # I/O PROFILE COVERAGE FOR SPECIFIC PERF CHARACTERISTICS #
+          ##########################################################
+
+          ## quick: {read, write} iops, {read, write} bw (all random)
+          ## detailed: {quick}, {read, write} latency & mixed 75r:25w (all random), {read, write} bw (all sequential)  
+          ## custom: a single user-defined job run with params specified in env 'CUSTOM'
+
+          - name: DBENCH_TYPE
+            value: detailed
+
+          ####################################################
+          # STANDARD TUNABLES FOR DBENCH_TYPE=QUICK/DETAILED #
+          ####################################################
+
+          ## active data size for the bench test
+
+          - name: FIO_SIZE
+            value: 2G
+
+          ## use un-buffered i/o (usually O_DIRECT)
+
+          - name: FIO_DIRECT
+            value: '1'
+
+          ## no of independent threads doing the same i/o
+
+          - name: FIO_NUMJOBS
+            value: '1'
+
+          ## space b/w starting offsets on a file in case of parallel file i/o
+
+          - name: FIO_OFFSET_INCREMENT
+            value: 250M
+
+          ## nature of i/o to file. commonly supported: libaio, sync, 
+
+          - name: FIO_IOENGINE
+            value: libaio
+
+          ## additional runtime options which will be appended to the above params
+          ## ensure options used are not mutually exclusive w/ above params
+          ## ex: '--group_reporting=1, stonewall, --ramptime=<val> etc..,
+          
+          - name: OPTIONS
+            value: ''
+
+          ####################################################
+          # CUSTOM JOB SPEC FOR DBENCH_TYPE=CUSTOM           #
+          ####################################################
+
+          ## this will execute a single job run with the params specified 
+          ## ex: '--bs=16k --iodepth=64 --ioengine=sync --size=500M --name=custom --readwrite=randrw --rwmixread=80 --random_distribution=pareto' 
+
+          - name: CUSTOM
+            value: ''
+          
+        volumeMounts:
+        - name: dbench-pv
+          mountPath: /data
+      restartPolicy: Never
+      volumes:
+      - name: dbench-pv
+        persistentVolumeClaim:
+          claimName: dbench
+  backoffLimit: 4
+---
+
