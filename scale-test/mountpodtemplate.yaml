@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: @podname@
+spec:
+  containers:
+  - command:
+      - sh
+      - -c
+      - 'sleep 500000;'
+    image: busybox
+    imagePullPolicy: Always
+    name: busybox
+    volumeMounts:
+    - mountPath: /mnt
+      name: results-vol
+  nodeSelector:
+    kubernetes.io/hostname: @nodename@
+  volumes:
+  - name: results-vol
+    hostPath:
+      path: @results_dir@
+      type: Directory
