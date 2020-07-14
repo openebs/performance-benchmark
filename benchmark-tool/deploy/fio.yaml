@@ -1,0 +1,43 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: fio
+spec:
+  containers:
+    - name: fio
+      image: nixery.dev/shell/fio
+      args:
+        - sleep
+        - "1000000"
+
+      resources:
+        limits:
+          cpu: "1"
+        requests:
+          cpu: "1"
+
+      securityContext:
+        privileged: true
+
+      volumeMounts:
+        - mountPath: "/disk"
+          name: disk
+
+    - name: tar
+      image: alpine
+      args:
+        - sleep
+        - "1000000"
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - mountPath: "/disk"
+          name: disk
+
+  volumes:
+    - name: disk
+      persistentVolumeClaim:
+        claimName: fio-pvc
+    # - name: io-profiles
+    #    configMap:
+    #      name: io-profiles
