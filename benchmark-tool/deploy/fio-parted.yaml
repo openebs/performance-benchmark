@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
     - name: fio
-      image: nixery.dev/shell/fio
+      image: dmonakhov/alpine-fio
       args:
         - sleep
         - "1000000"
@@ -14,19 +14,6 @@ spec:
           cpu: "1"
         requests:
           cpu: "1"
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - mountPath: "/disk1"
-          name: disk1
-        - mountPath: "/disk2"
-          name: disk2
-
-    - name: tar
-      image: alpine
-      args:
-        - sleep
-        - "1000000"
       securityContext:
         privileged: true
       volumeMounts:

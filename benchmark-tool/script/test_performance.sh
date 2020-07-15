@@ -110,13 +110,15 @@ if kubectl wait pod --timeout=120s --for=condition=Ready fio; then
     target_flag='replay_redirect'
 
     # Copy up the profiles (only when needed)
-    kubectl cp -c tar io_profiles fio:/io_profiles
+    kubectl cp io_profiles fio:/io_profiles
 
     fio_args+=" \
       --read_iolog=/io_profiles/postgres/nvme0n1.blktrace.0 \
       --filename=/dev/nvme1n1 \
       --replay_align=2 \
-      --replay_scale=2"
+      --replay_scale=2 \
+      --numjobs=10 \
+      --group_reporting=1"
   fi
 
   # Basic Fio
