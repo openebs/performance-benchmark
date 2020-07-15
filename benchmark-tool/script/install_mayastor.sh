@@ -57,3 +57,7 @@ done
 
 kubectl apply -f /deploy/storageclass-iscsi.yaml
 kubectl apply -f /deploy/storageclass-nbd.yaml
+
+
+
+kubectl wait pod --timeout=120s --for=condition=Ready -n mayastor -l app=mayastor
