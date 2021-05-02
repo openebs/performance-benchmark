@@ -40,7 +40,7 @@ spec:
   volumes:
   - name: results-volume
     hostPath:
-      path: /home/vitta/fio-results/@testid@
+      path: /tmp/fio-results/@testid@
       type: DirectoryOrCreate
   - name: data-volume
     persistentVolumeClaim:
