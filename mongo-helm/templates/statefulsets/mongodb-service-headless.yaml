@@ -1,0 +1,26 @@
+{{- if .Values.ha.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: {{ .Values.statefulset.service.name }}
+  name: {{ .Values.statefulset.service.name }}
+spec:
+  clusterIP: None
+  clusterIPs:
+  - None
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: {{ .Values.service.port }}
+    protocol: TCP
+    targetPort: {{ .Values.statefulset.service.port }}
+  selector:
+    role: mongo
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+{{- end }}

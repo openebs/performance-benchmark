@@ -1,0 +1,40 @@
+{{- if .Values.ha.enabled }}
+apiVersion: v1
+data:
+  script.sh: |+
+    #!/bin/bash
+    set -ex
+    #Initiating the server
+
+    hostname=`hostname -f`
+    stsname=`hostname | cut -d "-" -f1`
+    db_hostname="$hostname:27017"
+    serviceproxy="mongodb-service.default.svc.cluster.local:27017"
+    echo "Hostname of Server is $hostname"
+    stsidentity=`hostname -f | cut -d "." -f1 | cut -d "-" -f2`
+
+    if [ $stsidentity -eq 0 ];then
+    mongosh <<EOF
+    rs.initiate()
+    EOF
+    mongosh <<EOF
+    var cfg = rs.conf();cfg.members[0].host="$stsname-0.$serviceproxy";
+    rs.reconfig(cfg);
+    EOF
+    mongosh <<EOF
+    db.getSiblingDB("admin").createUser({
+    user : "{{ .Values.statefulset.secrets.username }}",
+    pwd  : "{{ .Values.statefulset.secrets.password }}",
+    roles: [ { role: "root", db: "admin" } ]});
+    EOF
+    elif [ $stsidentity -ne 0 ];then
+    mongosh mongodb://$stsname-0.$serviceproxy <<EOF
+    rs.add("$db_hostname")
+    rs.status()
+    EOF
+    fi
+
+kind: ConfigMap
+metadata:
+  name: mongo-replica
+{{- end }}

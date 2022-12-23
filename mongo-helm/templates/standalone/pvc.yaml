@@ -1,0 +1,17 @@
+{{- if .Values.standalone.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.storage.pvcname }} 
+spec:
+  accessModes:
+    - {{ .Values.storage.accessmode }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.size }}
+  {{ if .Values.statefulset.multireplica.enabled }}
+  storageClassName: {{ .Values.statefulset.multireplica.scname }}
+  {{ else }}
+  storageClassName: {{ .Values.statefulset.singlereplica.scname }}
+  {{ end }}
+{{- end }}

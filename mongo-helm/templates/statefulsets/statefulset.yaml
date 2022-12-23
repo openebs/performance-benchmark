@@ -1,0 +1,86 @@
+{{- if .Values.ha.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.statefulset.name }} 
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      role: mongo
+  serviceName: {{ .Values.statefulset.service.name }}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        environment: test
+        replicaset: rs0
+        role: mongo
+    spec:
+      containers:
+      - command:
+        - mongod
+        - --bind_ip
+        - 0.0.0.0
+        - --replSet
+        - rs0
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.statefulset.secrets.name }}
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.statefulset.secrets.name }}
+              key: password
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 90 ; ./tmp/scripts/script.sh  > /tmp/script-log"]
+        name: mongod-container
+        ports:
+        - containerPort: 27017
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /data/db
+          name: mongodb-persistent-storage-claim
+        - mountPath: /tmp/scripts
+          name: mongo-scripts
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - configMap:
+          defaultMode: 511
+          name: mongo-replica
+        name: mongo-scripts
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      annotations:
+        {{ if .Values.statefulset.multireplica.enabled }}
+        volume.beta.kubernetes.io/storage-class: {{ .Values.statefulset.multireplica.scname }}
+        {{ else }}
+        volume.beta.kubernetes.io/storage-class: {{ .Values.statefulset.singlereplica.scname }}
+        {{ end }}
+      creationTimestamp: null
+      name: mongodb-persistent-storage-claim
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: {{ .Values.statefulset.volume }}
+      volumeMode: Filesystem
+{{- end }}
