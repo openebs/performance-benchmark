@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.mongoclient.name }}
+    role: client
+  name: {{ .Values.mongoclient.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mongoclient.name }}
+      role: client
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mongoclient.name }}
+        role: client
+    spec:
+      containers:
+      - image: "{{ .Values.mongoclient.image.repository }}:{{ .Values.mongoclient.image.tag | default .Chart.AppVersion }}"
+        name: {{ .Values.mongoclient.name }}
+        env:
+        - name: mongo-client_INITDB_ROOT_USERNAME
+          value: 'dummy'
+        - name: mongo-client_INITDB_ROOT_PASSWORD
+          value: 'dummy'
